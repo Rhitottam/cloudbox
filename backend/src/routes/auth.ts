@@ -4,6 +4,7 @@ import auth from "@/lib/auth";
 
 const router = express.Router();
 
-router.all('/{*any}', toNodeHandler(auth));
+// Mount better-auth handler for all routes
+router.all('*', toNodeHandler(auth));
 
 export default router;
