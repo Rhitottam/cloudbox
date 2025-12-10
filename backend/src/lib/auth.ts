@@ -14,7 +14,7 @@ const auth = betterAuth({
     session: {
         cookieCache: {
             enabled: true,
-            maxAge: 60,
+            maxAge: 5 * 60, // 5 minutes cache
         }
     },
     trustedOrigins: [envConfig.FRONTEND_URL!], // Allow frontend origin
