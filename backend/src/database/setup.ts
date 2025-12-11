@@ -6,4 +6,5 @@ import * as schema from './schema'
 const sqlite = new Database('cloud_box.db');
 const db = drizzle({ client: sqlite, schema });
 
-export { db };
+type DatabaseType = typeof db;
+export { db, DatabaseType };
