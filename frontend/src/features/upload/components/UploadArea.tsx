@@ -1,8 +1,9 @@
-import { Card, Spinner, Progress } from "@/shared";
+import { Card, Spinner, Progress, MAX_UPLOAD_SIZE } from "@/shared";
 import clsx from "clsx";
 import { ChangeEvent, DragEvent, useCallback, useMemo, useRef, useState } from "react"
 import { useUploadStore } from "../store";
 import { UploadStatus } from "../types";
+import { getSizeText } from "@/lib/utils";
 
 export const UploadArea = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -80,7 +81,7 @@ export const UploadArea = () => {
       {
         uploadStatus === UploadStatus.IDLE &&
         <>
-          <p className="text-h5 text-foreground fade-out-0">Upload files upto 50GB</p>
+          <p className="text-h5 text-foreground fade-out-0">Upload files upto {getSizeText(MAX_UPLOAD_SIZE)}</p>
           <p className="text-sm text-muted-foreground fade-out-0"> Drop the files or Click to upload</p>
         </>
       }
