@@ -15,6 +15,10 @@ export class FileService {
     return this.fileRepository.getFilesByUserId(userId, options);
   }
 
+  async getStorageSpaceUsed(userId: string): Promise<number> {
+    return this.fileRepository.getStorageSpaceUsed(userId);
+  }
+
   async initiateUpload(userId: string, fileMetadata: Omit<FileMetadata, 'id' | 'userId' | 'createdAt'>) {
     const fileInfo = {
       ...fileMetadata,

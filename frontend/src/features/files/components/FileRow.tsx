@@ -3,7 +3,7 @@ import { FileInfo } from "../types";
 import { DownloadIcon, EyeIcon, Trash2Icon } from "lucide-react";
 import { previewUrl } from "../api";
 import clsx from "clsx";
-import { extensionFromMimeType } from "@/lib/utils";
+import { extensionFromMimeType, getSizeText } from "@/lib/utils";
 
 export type FileRowProps = {
   fileInfo: FileInfo;
@@ -18,19 +18,6 @@ export type FileActionButtonsProps = {
   onDownload: FileRowProps["onDownload"];
   variant: ButtonGroupVariant;
 };
-
-export const getFileSizeText = (size: number) => {
-  if (size > 1024 * 1024 * 1024) {
-    return `${(size / (1024 * 1024 * 1024)).toFixed(2)} GB`
-  }
-  if (size > 1024 * 1024) {
-    return `${(size / (1024 * 1024)).toFixed(2)} MB`
-  }
-  if (size > 1024) {
-    return `${(size / (1024)).toFixed(2)} KB`
-  }
-  return `${size} bytes`
-}
 
 export const formatDateTime = (dateString: string) => {
   const date = new Date(dateString);
@@ -105,7 +92,7 @@ export const FileRow = ({ fileInfo, disabled, onDelete, onDownload }: FileRowPro
         </div>
         <div className="flex flex-col items-start justify-center w-full min-w-0">
           <div className="font-bold sm:text-base text-sm w-full truncate">{fileInfo.name}</div>
-          <div className="sm:text-sm text-xs">{formatDateTime(fileInfo.createdAt)} · {getFileSizeText(fileInfo.size)}</div>
+          <div className="sm:text-sm text-xs">{formatDateTime(fileInfo.createdAt)} · {getSizeText(fileInfo.size)}</div>
         </div>
         <div className="gap-1 h-full items-center justify-end flex-wrap hidden sm:flex">
           <FileActionButtons

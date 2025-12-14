@@ -1,7 +1,7 @@
 import { file as fileSchema } from "@/database/schemas";
 import { DatabaseType } from "@/database/setup";
 import { FileMetadata, SortOrder } from "@/models";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { FileRepository } from "./interfaces";
 import { SQLiteColumn } from "drizzle-orm/sqlite-core";
 import { FileQueryOptions } from "@/validators";
@@ -54,6 +54,16 @@ export class SqliteFileRepository implements FileRepository {
   async deleteFile(fileId: string) {
     await this.sqliteDb.delete(fileSchema)
       .where(eq(fileSchema.id, fileId));
+  }
+
+  async getStorageSpaceUsed(userId: string): Promise<number> {
+    const results = await this.sqliteDb.select({
+      total: sql<number>`cast(sum(${fileSchema.size}) as int)`
+    })
+      .from(fileSchema)
+      .where(eq(fileSchema.userId, userId));
+
+    return results[0].total;
   }
 
 };

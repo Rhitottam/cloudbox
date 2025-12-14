@@ -26,6 +26,13 @@ export const FileInfoSchema = z.object({
   createdAt: z.string(),
   name: z.string(),
   url: z.string(),
-})
+});
 
 export type FileInfo = z.infer<typeof FileInfoSchema>;
+
+export const StorageInfoSchema = z.object({
+  used: z.number(),
+  remaining: z.number(),
+});
+
+export type StorageInfo = z.infer<typeof StorageInfoSchema>;

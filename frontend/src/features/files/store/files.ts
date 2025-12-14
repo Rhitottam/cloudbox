@@ -3,6 +3,7 @@ import { FileInfo, FileQueryOptions, LoadingStatus, SortOrder } from "../types";
 import { deleteFile, downloadUrl, loadFileList } from "../api";
 import { PAGE_SIZE } from "@/shared";
 import { toast } from "sonner";
+import { useUploadStore } from "@/features/upload";
 
 
 interface FilesStore {
@@ -108,6 +109,7 @@ export const useFilesStore = create<FilesStore>()((set, get) => ({
           fileMap: { ...state.fileMap },
         }
       });
+      await useUploadStore.getState().getStorageSpace();
     } else {
       set((state) => {
         const fileDeletions = state.fileDeletions;

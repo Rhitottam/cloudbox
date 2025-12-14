@@ -14,3 +14,16 @@ export function isAllowedMimeType(mimeType: string): boolean {
 export function extensionFromMimeType(mimeType: string): string {
   return mime.getExtension(mimeType) ?? 'bin';
 }
+
+export function getSizeText(size: number) {
+  if (size > 1024 * 1024 * 1024) {
+    return `${(size / (1024 * 1024 * 1024)).toFixed(2)} GB`
+  }
+  if (size > 1024 * 1024) {
+    return `${(size / (1024 * 1024)).toFixed(2)} MB`
+  }
+  if (size > 1024) {
+    return `${(size / (1024)).toFixed(2)} KB`
+  }
+  return `${size} bytes`
+}

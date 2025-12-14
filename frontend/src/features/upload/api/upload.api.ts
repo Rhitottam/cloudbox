@@ -1,8 +1,37 @@
 import { API_BASE_URL, MAX_UPLOAD_SIZE } from "@/shared";
-import { FileInfoSchema, UploadInfoSchema } from "../types";
+import { FileInfoSchema, StorageInfoSchema, UploadInfoSchema } from "../types";
 import { isAllowedMimeType } from "@/lib/utils";
 
-
+export const getStorageSpaceUsed = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}api/file/storage`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: "include",
+    });
+    const data = await response.json();
+    const parsed = StorageInfoSchema.safeParse(data.data);
+    if (data.success && parsed.success) {
+      return {
+        success: data.success,
+        data: parsed.data,
+      };
+    } else {
+      return {
+        success: false,
+        message: `Failed to get storage space`,
+      };
+    }
+  } catch (e) {
+    const message = e instanceof Error ? e.message : `Failed to get storage space`;
+    return {
+      success: false,
+      message,
+    };
+  }
+}
 
 export const initiateUpload = async (file: File) => {
   if (file.size > MAX_UPLOAD_SIZE)

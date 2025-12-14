@@ -1,14 +1,16 @@
 import { create } from "zustand"
-import { UploadInfo, UploadStatus } from "../types";
+import { StorageInfo, UploadInfo, UploadStatus } from "../types";
 import { toast } from "sonner";
-import { abortUpload, completeUpload, initiateUpload, uploadPart } from "../api";
+import { abortUpload, completeUpload, getStorageSpaceUsed, initiateUpload, uploadPart } from "../api";
 import { useFilesStore } from "@/features/files";
 
 interface UploadStore {
+  storage: null | StorageInfo,
   currentUpload: null | UploadInfo,
   uploadedChunks: any[],
   uploadedFile: null | File,
   uploadStatus: UploadStatus,
+  getStorageSpace: () => Promise<void>,
   initiateUpload: (file: File) => Promise<void>,
   uploadParts: () => Promise<void>,
   completeUpload: () => Promise<void>,
@@ -16,6 +18,7 @@ interface UploadStore {
 }
 
 const initial = {
+  storage: null,
   currentUpload: null,
   uploadedChunks: [],
   uploadedFile: null,
@@ -24,7 +27,26 @@ const initial = {
 
 export const useUploadStore = create<UploadStore>()((set, get) => ({
   ...initial,
+
+  getStorageSpace: async () => {
+    const data = await getStorageSpaceUsed();
+    if (data.success) {
+      set({
+        storage: data.data,
+      });
+    } else {
+      set({
+        storage: null,
+      });
+    }
+  },
+
   initiateUpload: async (file: File) => {
+    const remaining = get().storage?.remaining ?? 0;
+    if (remaining < file.size) {
+      toast.error('Space unavailable for uploading this file');
+      return;
+    }
     set({ uploadStatus: UploadStatus.PENDING });
     const data = await initiateUpload(file);
     if (data.success) {
@@ -67,6 +89,14 @@ export const useUploadStore = create<UploadStore>()((set, get) => ({
       const data = await completeUpload(currentUpload.id);
       if (data.success && data.data) {
         useFilesStore.getState().prependFile(data.data);
+        set((state) => {
+          return ({
+            storage: state.storage ? {
+              used: state.storage.used + data.data.size,
+              remaining: state.storage.remaining - data.data.size,
+            } : null,
+          })
+        });
       }
       else {
         await abortUpload(currentUpload.id);
@@ -77,9 +107,10 @@ export const useUploadStore = create<UploadStore>()((set, get) => ({
   },
 
   reset: () => {
-    set({
-      ...initial
-    });
+    set((state) => ({
+      ...initial,
+      storage: state.storage,
+    }));
   }
 
 

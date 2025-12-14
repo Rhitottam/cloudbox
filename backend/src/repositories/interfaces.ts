@@ -7,6 +7,7 @@ export interface FileRepository {
   updateFile(fileId: string, update: Partial<Pick<FileMetadata, 'url' | 'name'>>): Promise<FileMetadata>;
   saveFile(file: Omit<FileMetadata, 'createdAt'>): Promise<void>;
   deleteFile(fileId: string): Promise<void>;
+  getStorageSpaceUsed(userId: string): Promise<number>;
 };
 
 export interface UploadRepository {

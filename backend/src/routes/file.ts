@@ -21,6 +21,28 @@ const fileService = new FileService(
   new SqliteFileRepository(db)
 );
 
+router.get('/storage', async (req: Request, res: Response) => {
+  try {
+    const user: User = req.body.user;
+    const { id } = user;
+    const spaceUsed = await fileService.getStorageSpaceUsed(id);
+    const spaceRemaining = envConfig.PER_USER_QUOTA - (spaceUsed ?? 0);
+    res.status(200).json({
+      success: true,
+      data: {
+        used: spaceUsed ?? 0,
+        remaining: spaceRemaining,
+      }
+    });
+  } catch (e) {
+    res.status(500).json({
+      success: false,
+      message: getErrorMessage(e),
+    });
+  }
+
+});
+
 router.get('/list', async (req: Request, res: Response) => {
   try {
     const user: User = req.body.user;
@@ -58,7 +80,7 @@ router.get('/list', async (req: Request, res: Response) => {
         nextOffset: (offsetValue ?? 0) + limitValue + 1,
         hasMore: fileList && fileList?.length >= limitValue + 1
       }
-    })
+    });
 
   } catch (e) {
     res.status(500).json({
@@ -82,6 +104,16 @@ router.post('/upload/initiate', async (req: Request, res: Response) => {
     }
 
     const fileMetadata = parsed.data;
+
+    const storageSpaceUsed = await fileService.getStorageSpaceUsed(id);
+
+    if (storageSpaceUsed + fileMetadata.size > envConfig.PER_USER_QUOTA) {
+      res.status(400).json({
+        success: false,
+        message: `Exceeded storage quota for user. Space remaining: ${envConfig.PER_USER_QUOTA - storageSpaceUsed} bytes`,
+      })
+      return;
+    }
 
     const uploadInfo = await fileService.initiateUpload(id, fileMetadata);
 
