@@ -11,5 +11,18 @@ export const FileInfoListSchema = z.object({
   nextOffset: z.number(),
   hasMore: z.boolean(),
 });
+
+export enum SortOrder {
+  ASC = "asc",
+  DESC = "desc",
+};
+
+export type FileQueryOptions = {
+  limit: number,
+  offset?: number,
+  sortOrder?: SortOrder,
+  sortBy?: string,
+};
+
 export type { FileInfo } from "@/features/upload";
 

@@ -31,8 +31,8 @@ router.get('/list', async (req: Request, res: Response) => {
     const result = FileQueryOptionsSchema.safeParse({
       limit: limitValue,
       offset: offsetValue,
-      sortBy,
-      sortOrder,
+      sortBy: sortBy?.length ? sortBy : undefined,
+      sortOrder: sortOrder?.length ? sortOrder : undefined,
     });
     if (!result.success) {
       res.status(400).json({

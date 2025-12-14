@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { FileInfo, LoadingStatus } from "../types";
+import { FileInfo, FileQueryOptions, LoadingStatus, SortOrder } from "../types";
 import { deleteFile, downloadUrl, loadFileList } from "../api";
 import { PAGE_SIZE } from "@/shared";
 import { toast } from "sonner";
@@ -9,6 +9,8 @@ interface FilesStore {
   fileIdList: string[];
   currentOffset: number | undefined;
   hasMore: boolean;
+  sortBy?: string;
+  sortOrder?: SortOrder;
   fileMap: Record<string, FileInfo>;
   fileListStatus: LoadingStatus;
   fileDeletions: Set<string>;
@@ -16,12 +18,15 @@ interface FilesStore {
   prependFile: (file: FileInfo) => void;
   deleteFile: (fileId: string) => Promise<void>;
   downloadFile: (file: FileInfo) => void;
+  updateFileListQuery: (options: Omit<FileQueryOptions, 'limit' | 'offset'>) => Promise<void>;
 }
 
 const initial = {
   fileIdList: [],
   currentOffset: undefined,
   hasMore: true,
+  sortOrder: undefined,
+  sortBy: undefined,
   fileMap: {},
   fileDeletions: new Set<string>(),
   fileListStatus: LoadingStatus.IDLE,
@@ -36,7 +41,12 @@ export const useFilesStore = create<FilesStore>()((set, get) => ({
 
     set({ fileListStatus: LoadingStatus.LOADING });
     const offset = get().currentOffset;
-    const response = await loadFileList(PAGE_SIZE, offset);
+    const response = await loadFileList({
+      limit: PAGE_SIZE,
+      offset,
+      sortBy: get().sortBy,
+      sortOrder: get().sortOrder
+    });
     if (response.success && response.data) {
       const { list, nextOffset, hasMore } = response.data;
       const idList = list.map((item) => item.id);
@@ -58,7 +68,17 @@ export const useFilesStore = create<FilesStore>()((set, get) => ({
     }
     set({ fileListStatus: LoadingStatus.IDLE });
   },
-
+  updateFileListQuery: async (options) => {
+    const { sortOrder, sortBy } = options;
+    set((state) => ({
+      sortBy: sortBy ?? state.sortBy,
+      sortOrder: sortOrder ?? state.sortOrder,
+      fileIdList: [],
+      fileMap: {},
+      currentOffset: undefined,
+    }))
+    get().loadFileList();
+  },
   prependFile: (fileInfo: FileInfo) => {
     set((state) => ({
       fileIdList: [fileInfo.id, ...state.fileIdList],

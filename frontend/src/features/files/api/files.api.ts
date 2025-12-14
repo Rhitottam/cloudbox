@@ -1,12 +1,15 @@
 import { API_BASE_URL } from "@/shared";
-import { FileInfoListSchema } from "../types";
+import { FileInfoListSchema, FileQueryOptions } from "../types";
 
-export const loadFileList = async (limit: number, offset?: number) => {
+export const loadFileList = async (options: FileQueryOptions) => {
+  const { limit, sortOrder, sortBy, offset } = options;
   try {
     const url = new URL(`${API_BASE_URL}api/file/list`);
     url.search = new URLSearchParams({
       limit: limit.toString(),
       offset: offset?.toString() ?? '',
+      sortOrder: sortOrder ?? '',
+      sortBy: sortBy ?? '',
     }).toString();
 
     const response = await fetch(url, {
