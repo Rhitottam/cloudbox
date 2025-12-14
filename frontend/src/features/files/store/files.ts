@@ -77,6 +77,7 @@ export const useFilesStore = create<FilesStore>()((set, get) => ({
       fileIdList: [],
       fileMap: {},
       currentOffset: undefined,
+      hasMore: true,
     }))
     get().loadFileList();
   },
