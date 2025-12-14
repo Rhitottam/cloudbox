@@ -7,7 +7,7 @@ import { SqliteChunkRepoistory, SqliteUploadRepository } from '@/repositories/up
 import { db } from '@/database/setup';
 import { SqliteFileRepository } from '@/repositories/file.repository';
 import { envConfig } from '@/config';
-import { FileMetadataSchema, UploadCompleteSchema, UploadPartSchema } from '@/validators';
+import { FileMetadataSchema, FileQueryOptionsSchema, UploadCompleteSchema, UploadPartSchema } from '@/validators';
 import { getErrorMessage } from '@/lib/utils';
 
 const router = express.Router();
@@ -25,20 +25,37 @@ router.get('/list', async (req: Request, res: Response) => {
   try {
     const user: User = req.body.user;
     const { id: userId } = user;
-    const { limit, offset } = req.query;
+    const { limit, offset, sortBy, sortOrder } = req.query;
     const limitValue = limit ? parseInt(String(limit)) : envConfig.RETRIEVAL_LIMIT;
     const offsetValue = offset ? parseInt(String(offset)) : undefined;
+    const result = FileQueryOptionsSchema.safeParse({
+      limit: limitValue,
+      offset: offsetValue,
+      sortBy,
+      sortOrder,
+    });
+    if (!result.success) {
+      res.status(400).json({
+        success: false,
+        message: 'Invalid query paramaters'
+      })
+      return;
+    }
     const fileList = await fileService.getFileList(
       userId,
-      limitValue + 1,
-      offsetValue
+      {
+        limit: limitValue + 1,
+        offset: offsetValue,
+        sortBy: result.data.sortBy,
+        sortOrder: result.data.sortOrder,
+      },
     );
 
     res.status(200).json({
       success: true,
       data: {
         list: fileList,
-        nextOffset: (offsetValue ?? 0) + limitValue,
+        nextOffset: (offsetValue ?? 0) + limitValue + 1,
         hasMore: fileList && fileList?.length >= limitValue + 1
       }
     })

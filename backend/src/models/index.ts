@@ -31,3 +31,8 @@ export enum UploadStatus {
   FAILED = "failed",
   ABORTED = "aborted",
 };
+
+export enum SortOrder {
+  ASC = "asc",
+  DESC = "desc",
+};

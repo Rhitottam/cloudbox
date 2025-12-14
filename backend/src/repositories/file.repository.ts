@@ -1,19 +1,31 @@
 import { file as fileSchema } from "@/database/schemas";
 import { DatabaseType } from "@/database/setup";
-import { FileMetadata } from "@/models";
+import { FileMetadata, SortOrder } from "@/models";
 import { eq } from "drizzle-orm";
 import { FileRepository } from "./interfaces";
+import { SQLiteColumn } from "drizzle-orm/sqlite-core";
+import { FileQueryOptions } from "@/validators";
 
 export class SqliteFileRepository implements FileRepository {
 
   constructor(private readonly sqliteDb: DatabaseType) { }
 
-  async getFilesByUserId(userId: string, limit: number, offset: number | undefined) {
+  async getFilesByUserId(userId: string, options: FileQueryOptions) {
     const results = await this.sqliteDb.query.file.findMany({
       where: (file, { eq, and, isNotNull }) => and(eq(file.userId, userId), isNotNull(file.url)),
-      limit,
-      offset: offset ? Number(offset) : undefined,
-      orderBy: (file, { desc }) => [desc(file.createdAt)],
+      limit: options.limit,
+      offset: options.offset ? Number(options.offset) : undefined,
+      orderBy: (file, { asc, desc }) => {
+        let sortFunction = desc;
+        let sortBy: SQLiteColumn = file.createdAt;
+        if (options.sortOrder) {
+          sortFunction = options.sortOrder === SortOrder.ASC ? asc : desc;
+        }
+        if (options.sortBy && file[options.sortBy] instanceof SQLiteColumn) {
+          sortBy = file[options.sortBy];
+        }
+        return [sortFunction(sortBy)]
+      },
     });
     return results
   }

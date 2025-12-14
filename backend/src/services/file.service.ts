@@ -1,6 +1,7 @@
 import { ChunkRepository, FileRepository, UploadRepository } from "@/repositories/interfaces";
 import { StorageService } from "./interfaces";
 import { FileMetadata, UploadStatus } from "@/models";
+import { FileQueryOptions } from "@/validators";
 
 export class FileService {
   constructor(
@@ -10,8 +11,8 @@ export class FileService {
     private readonly fileRepository: FileRepository,
   ) { }
 
-  async getFileList(userId: string, limit: number, offset: number | undefined): Promise<FileMetadata[] | null> {
-    return this.fileRepository.getFilesByUserId(userId, limit, offset);
+  async getFileList(userId: string, options: FileQueryOptions): Promise<FileMetadata[] | null> {
+    return this.fileRepository.getFilesByUserId(userId, options);
   }
 
   async initiateUpload(userId: string, fileMetadata: Omit<FileMetadata, 'id' | 'userId' | 'createdAt'>) {

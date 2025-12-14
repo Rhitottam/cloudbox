@@ -1,7 +1,8 @@
 import { ChunkInfo, FileMetadata, UploadMetadata } from "@/models";
+import { FileQueryOptions } from "@/validators";
 
 export interface FileRepository {
-  getFilesByUserId(userId: string, limit: number, offset: number | undefined): Promise<FileMetadata[] | null>;
+  getFilesByUserId(userId: string, options: FileQueryOptions): Promise<FileMetadata[] | null>;
   getFileInfo(fileId: string): Promise<FileMetadata | null>;
   updateFile(fileId: string, update: Partial<Pick<FileMetadata, 'url' | 'name'>>): Promise<FileMetadata>;
   saveFile(file: Omit<FileMetadata, 'createdAt'>): Promise<void>;
