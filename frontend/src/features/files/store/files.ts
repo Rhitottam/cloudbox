@@ -130,7 +130,6 @@ export const useFilesStore = create<FilesStore>()((set, get) => ({
 
       document.body.removeChild(link);
     } catch (error) {
-      console.error('Download error:', error);
       toast.error('Failed to download file');
     }
   },
