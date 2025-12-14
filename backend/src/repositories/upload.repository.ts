@@ -5,26 +5,30 @@ import { upload as uploadSchema, chunk as chunkSchema } from "@/database/schemas
 import { eq } from "drizzle-orm";
 
 export class SqliteUploadRepository implements UploadRepository {
-  constructor(private readonly sqliteDb: DatabaseType) { }
+  constructor(private readonly sqlitedb: DatabaseType) { }
 
   async getUploadById(uploadId: string): Promise<UploadMetadata | null> {
-    const result = await this.sqliteDb.query.upload.findFirst({
+    const result = await this.sqlitedb.query.upload.findFirst({
       where: (upload, { eq }) => eq(upload.id, uploadId),
     });
     if (!result) return null;
     return result
   }
   async saveUpload(upload: Omit<UploadMetadata, "created_at">): Promise<void> {
-    await this.sqliteDb.insert(uploadSchema).values({
+    await this.sqlitedb.insert(uploadSchema).values({
       ...upload,
       createdAt: new Date(),
     });
     return;
   }
   async updateUploadStatus(uploadId: string, status: UploadMetadata["status"]): Promise<void> {
-    await this.sqliteDb.update(uploadSchema).set({
+    await this.sqlitedb.update(uploadSchema).set({
       status,
     }).where(eq(uploadSchema.id, uploadId))
+  }
+  async clearUpload(uploadId: string): Promise<void> {
+    await this.sqlitedb.delete(uploadSchema)
+      .where(eq(uploadSchema.id, uploadId));
   }
 }
 
@@ -43,5 +47,9 @@ export class SqliteChunkRepoistory implements ChunkRepository {
       orderBy: (chunk, { asc }) => asc(chunk.chunkIndex)
     });
     return results;
+  }
+  async clearChunks(uploadId: string): Promise<void> {
+    await this.sqlitedb.delete(chunkSchema)
+      .where(eq(chunkSchema.uploadId, uploadId));
   }
 }

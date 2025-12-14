@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import { Layout } from '@/components'
-import { Auth, Home} from '@/pages'
-import { RequireAuth } from '@/components'
+import { Layout } from '@/shared/components'
+import { Auth, Home } from '@/pages'
+import { RequireAuth } from '@/shared/components'
 
 function App() {
   return (

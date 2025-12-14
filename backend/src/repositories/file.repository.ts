@@ -36,11 +36,11 @@ export class SqliteFileRepository implements FileRepository {
       ...file,
       createdAt: new Date(),
     };
-    this.sqliteDb.insert(fileSchema).values(createdFile);
+    await this.sqliteDb.insert(fileSchema).values(createdFile);
   }
 
   async deleteFile(fileId: string) {
-    this.sqliteDb.delete(fileSchema)
+    await this.sqliteDb.delete(fileSchema)
       .where(eq(fileSchema.id, fileId));
   }
 

@@ -24,7 +24,7 @@ export class FileService {
     await this.fileRepository.saveFile({
       ...fileInfo,
       id: uploadInfo.fileId,
-    })
+    });
     await this.uploadRepository.saveUpload(uploadInfo);
     return uploadInfo;
   }
@@ -43,10 +43,25 @@ export class FileService {
       const { url } = await this.storageService.completeUpload(uploadId, fileId, chunks);
       await this.uploadRepository.updateUploadStatus(uploadId, UploadStatus.UPLOADED);
       const fileInfo = await this.fileRepository.updateFile(fileId, { url });
+      // Perform Cleanup of temporary upload data
+      await this.uploadRepository.clearUpload(uploadId);
+      await this.chunkRepository.clearChunks(uploadId);
       return fileInfo;
     }
 
     return null;
+  }
+
+  async abortUpload(uploadId: string) {
+    const uploadInfo = await this.uploadRepository.getUploadById(uploadId);
+
+    if (uploadInfo) {
+      const { fileId } = uploadInfo;
+      await this.storageService.abortUpload(uploadId);
+      await this.uploadRepository.clearUpload(uploadId);
+      await this.chunkRepository.clearChunks(uploadId);
+      await this.fileRepository.deleteFile(fileId);
+    }
   }
 
   async getFileMetadata(fileId: string) {

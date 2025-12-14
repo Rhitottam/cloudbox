@@ -21,7 +21,7 @@ export const file = sqliteTable("file", {
 );
 
 export const chunk = sqliteTable("chunk", {
-  uploadId: text("upload_id").notNull(),
+  uploadId: text("upload_id").notNull().references(() => upload.id, { onDelete: "cascade" }),
   chunkIndex: integer("chunk_index").notNull(),
   size: integer("size").notNull(),
   etag: text("etag"),

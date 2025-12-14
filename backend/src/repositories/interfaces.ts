@@ -12,9 +12,11 @@ export interface UploadRepository {
   getUploadById(uploadId: string): Promise<UploadMetadata | null>;
   saveUpload(upload: Omit<UploadMetadata, 'createdAt'>): Promise<void>;
   updateUploadStatus(uploadId: string, status: UploadMetadata['status']): Promise<void>;
+  clearUpload(uploadId: string): Promise<void>;
 };
 
 export interface ChunkRepository {
   saveChunk(chunk: ChunkInfo): Promise<void>;
-  getChunksByUploadId(_uploadId: string): Promise<ChunkInfo[] | null>;
+  getChunksByUploadId(uploadId: string): Promise<ChunkInfo[] | null>;
+  clearChunks(uploadId: string): Promise<void>;
 }

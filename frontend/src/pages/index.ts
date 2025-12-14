@@ -1,2 +1,2 @@
-export * from './Auth';
+export { Auth } from '@/features/auth';
 export * from './Home';

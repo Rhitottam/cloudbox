@@ -1,25 +1,20 @@
-import { Input } from "@/components/ui/input"
+import { Input } from "@/shared/components/ui/input"
 import { EyeIcon, EyeOffIcon } from "lucide-react"
 import {
   useState,
   type ComponentProps,
-  type ReactNode,
   type ChangeEvent,
 } from "react"
 import {
   InputGroupButton,
-} from "@/components/ui/input-group"
+} from "@/shared/components/ui/input-group"
 import clsx from "clsx"
 
 export function PasswordInput({
-  children,
   onChange,
   value,
-  defaultValue,
   ...props
-}: Omit<ComponentProps<typeof Input>, "type"> & {
-  children?: ReactNode
-}) {
+}: Omit<ComponentProps<typeof Input>, "type">) {
   const [showPassword, setShowPassword] = useState(false)
 
   const Icon = showPassword ? EyeOffIcon : EyeIcon
@@ -30,15 +25,13 @@ export function PasswordInput({
 
   return (
     <div className="relative">
-      <Input 
+      <Input
         type={showPassword ? "text" : "password"}
-        {...props} 
+        {...props}
         className={clsx(props.className, 'pr-8')}
         onChange={handleChange}
         value={value}
-      >
-        {children}
-      </Input>
+      />
       <InputGroupButton
         size="icon-xs"
         className="absolute right-2 top-1/2 -translate-y-1/2"

@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import { authMiddleware } from './auth';
-import { User } from 'better-auth/*';
+import { User } from 'better-auth';
 import { FileService } from '@/services/file.service';
 import { LocalStorageService } from '@/services/storage.service';
 import { SqliteChunkRepoistory, SqliteUploadRepository } from '@/repositories/upload.repository';
@@ -21,7 +21,7 @@ const fileService = new FileService(
   new SqliteFileRepository(db)
 );
 
-router.get('list', async (req: Request, res: Response) => {
+router.get('/list', async (req: Request, res: Response) => {
   try {
     const user: User = req.body.user;
     const { id: userId } = user;
@@ -30,7 +30,7 @@ router.get('list', async (req: Request, res: Response) => {
     const offsetValue = offset ? parseInt(String(offset)) : undefined;
     const fileList = await fileService.getFileList(
       userId,
-      limitValue,
+      limitValue + 1,
       offsetValue
     );
 
@@ -39,6 +39,7 @@ router.get('list', async (req: Request, res: Response) => {
       data: {
         list: fileList,
         nextOffset: (offsetValue ?? 0) + limitValue,
+        hasMore: fileList && fileList?.length >= limitValue + 1
       }
     })
 
@@ -50,7 +51,7 @@ router.get('list', async (req: Request, res: Response) => {
   }
 });
 
-router.post('upload/initate', async (req: Request, res: Response) => {
+router.post('/upload/initiate', async (req: Request, res: Response) => {
   try {
     const { data, user } = req.body;
     const { id } = user;
@@ -80,19 +81,27 @@ router.post('upload/initate', async (req: Request, res: Response) => {
   }
 });
 
-router.post('upload/part', async (req: Request, res: Response) => {
+router.post('/upload/part', async (req: Request, res: Response) => {
   try {
     const { data } = req.body;
-    const parsed = UploadPartSchema.safeParse(data);
-    if (!parsed.success) {
+    if (!data) {
       res.status(400).json({
         success: false,
-        message: 'Invalid upload part parameters'
+        message: 'Missing data field in request body'
       })
       return;
     }
-    let chunk = req.files?.chunk;
 
+    const parsed = UploadPartSchema.safeParse(JSON.parse(data));
+    if (!parsed.success) {
+      res.status(400).json({
+        success: false,
+        message: parsed.error ?? 'Invalid upload part parameters'
+      })
+      return;
+    }
+
+    let chunk = req.files?.chunk;
     if (!chunk) {
       res.status(400).json({
         success: false,
@@ -120,7 +129,7 @@ router.post('upload/part', async (req: Request, res: Response) => {
   }
 });
 
-router.post('upload/complete', async (req: Request, res: Response) => {
+router.post('/upload/complete', async (req: Request, res: Response) => {
   try {
     const { data } = req.body;
     const parsed = UploadCompleteSchema.safeParse(data);
@@ -148,7 +157,34 @@ router.post('upload/complete', async (req: Request, res: Response) => {
   }
 });
 
-router.get('download/:fileId', async (req: Request, res: Response) => {
+router.post('/upload/abort', async (req: Request, res: Response) => {
+  try {
+    const { data } = req.body;
+    const parsed = UploadCompleteSchema.safeParse(data);
+    if (!parsed.success) {
+      res.status(400).json({
+        success: false,
+        message: 'Invalid request parameters'
+      })
+      return;
+    }
+    const { uploadId } = parsed.data;
+
+    await fileService.abortUpload(uploadId);
+
+    res.status(200).json({
+      success: true,
+    });
+
+  } catch (e) {
+    res.status(500).json({
+      success: false,
+      message: getErrorMessage(e),
+    });
+  }
+});
+
+router.get('/download/:fileId', async (req: Request, res: Response) => {
   try {
     const { fileId } = req.params;
     const fileMetadata = await fileService.getFileMetadata(fileId);
@@ -169,10 +205,14 @@ router.get('download/:fileId', async (req: Request, res: Response) => {
     });
     fileStream.pipe(res);
     fileStream.on('error', (err) => {
-      res.status(500).json({
-        success: false,
-        message: getErrorMessage(err, 'Error downloading file'),
-      });
+      if (!res.headersSent) {
+        res.status(500).json({
+          success: false,
+          message: getErrorMessage(err, 'Error downloading file'),
+        });
+      } else {
+        res.end();
+      }
     });
 
   } catch (e) {
@@ -183,7 +223,7 @@ router.get('download/:fileId', async (req: Request, res: Response) => {
   }
 });
 
-router.get('view/:fileId', async (req: Request, res: Response) => {
+router.get('/view/:fileId', async (req: Request, res: Response) => {
   try {
     const { fileId } = req.params;
     const fileMetadata = await fileService.getFileMetadata(fileId);
@@ -203,10 +243,14 @@ router.get('view/:fileId', async (req: Request, res: Response) => {
     });
     fileStream.pipe(res);
     fileStream.on('error', (err) => {
-      res.status(500).json({
-        success: false,
-        message: getErrorMessage(err, 'Error viewing file'),
-      });
+      if (!res.headersSent) {
+        res.status(500).json({
+          success: false,
+          message: getErrorMessage(err, 'Error viewing file'),
+        });
+      } else {
+        res.end();
+      }
     });
 
   } catch (e) {
@@ -218,7 +262,7 @@ router.get('view/:fileId', async (req: Request, res: Response) => {
 });
 
 
-router.get('delete/:fileId', async (req: Request, res: Response) => {
+router.delete('/:fileId', async (req: Request, res: Response) => {
   try {
     const { fileId } = req.params;
     const fileMetadata = await fileService.getFileMetadata(fileId);
@@ -232,7 +276,7 @@ router.get('delete/:fileId', async (req: Request, res: Response) => {
 
     await fileService.deleteFile(fileId);
     res.status(200).json({
-      success: false,
+      success: true,
     });
 
   } catch (e) {

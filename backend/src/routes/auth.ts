@@ -1,7 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { toNodeHandler, fromNodeHeaders } from "better-auth/node";
 import auth from "@/lib/auth";
-import { User } from 'better-auth/*';
+import type { User } from 'better-auth';
 
 const router = express.Router();
 

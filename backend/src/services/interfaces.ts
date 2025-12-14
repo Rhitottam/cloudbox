@@ -9,6 +9,8 @@ export interface StorageService {
 
   completeUpload(uploadId: string, fileId: string, parts: ChunkInfo[]): Promise<{ url: string }>;
 
+  abortUpload(uploadId: string): Promise<boolean>;
+
   deleteFile(fileId: string): Promise<void>;
 
   retrieveFile(fileId: string): ReadStream;
